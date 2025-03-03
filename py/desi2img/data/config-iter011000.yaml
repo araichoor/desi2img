@@ -1,0 +1,28 @@
+#
+outdir : "/pscratch/sd/r/raichoor/desi2decam/tiles-20240528-ra10x/nccd_min_0/run3-rnside32"
+np_rand_seed : 1234
+# rands
+ramin : 0.
+ramax : 360.
+decmin : -40.
+decmax : 40.
+randdens : 100
+rnside: 32
+# tiles
+tilesfn : "/global/cfs/cdirs/desi/users/raichoor/desi2decam/tiles-20240528-ra10x/desi2-decam-tiles-20240528-ra10x.fits"
+# ccds
+black_ccd_names : "N30,S7"
+npix_msk_xstart : 33
+npix_msk_xend : 33
+npix_msk_ystart : 33
+npix_msk_yend : 33
+inflate_ra_factor : 10
+# annealing
+metric_num : 3
+anneal_tallow_rad : -99.
+anneal_niter : 500
+anneal_rmax : 0.3
+anneal_r_distrib : "gaussian"
+anneal_nt_per_proc : 64
+anneal_nccd_min : 0
+anneal_tedge_freeze : False
