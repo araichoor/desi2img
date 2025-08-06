@@ -1,0 +1,236 @@
+#!/usr/bin/env python
+
+import sys
+import os
+from glob import glob
+from datetime import datetime, timedelta
+import numpy as np
+import fitsio
+from astropy.table import Table, vstack
+from astropy.io import fits
+from astropy.time import Time
+import multiprocessing
+from desi2img.ibis_status_utils import (
+    get_surveys_fields,
+    get_ibis_bands,
+    custom_read_tiles_exps_ccds,
+    get_filename,
+    create_wide_goalfn,
+    plot_tiles,
+    plot_wide_skycov,
+    plot_depths,
+    plot_night_expdepths,
+    plot_night_obsconds,
+    write_html,
+)
+from argparse import ArgumentParser
+
+
+allowed_steps = [
+    "goalmap",
+    "skymap",
+    "expdepth",
+    "obsconds",
+    "html",
+]
+default_outdir = os.path.join(
+    os.getenv("DESI_ROOT"), "users", "raichoor", "ibis-status"
+)
+default_gitdir = os.path.join(
+    os.getenv("DESI_ROOT"), "users", "raichoor", "ibis-observing"
+)
+
+
+def parse():
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--outdir",
+        help="output directory (default={})".format(default_outdir),
+        type=str,
+        default=default_outdir,
+    )
+    parser.add_argument(
+        "--gitdir",
+        help="github checkout directory (default={})".format(default_gitdir),
+        type=str,
+        default=default_gitdir,
+    )
+    parser.add_argument(
+        "--survey",
+        help="only run for that survey",
+        type=str,
+        choices=["wide", "deep"],
+        default=None,
+    )
+    parser.add_argument(
+        "--steps",
+        help="comma-separated list of steps (default={})".format(
+            ",".join(allowed_steps)
+        ),
+        type=str,
+        default=",".join(allowed_steps),
+    )
+    parser.add_argument(
+        "--numproc",
+        help="number of concurrent processes to use (default=1)",
+        type=int,
+        default=1,
+    )
+    parser.add_argument(
+        "--recompute", action="store_true", help="recompute existing files?"
+    )
+    args = parser.parse_args()
+    steps = np.array(args.steps.split(","))
+    sel = ~np.in1d(steps, allowed_steps)
+    if sel.sum() > 0:
+        raise ValueError(
+            "ERROR : not allowed args.steps = {}\t=> exiting".format(
+                ",".join(steps[sel])
+            )
+        )
+    for kwargs in args._get_kwargs():
+        print(kwargs)
+    return args
+
+
+def main():
+
+    args = parse()
+
+    # AR settings
+    os.environ["IBIS_OBS_GIT"] = args.gitdir
+    camera = "decam"
+    allexpsfn = os.path.join(args.outdir, "db-mb-all.ecsv")
+    thisnight = int(
+        Time(Time(datetime.now()).mjd - 1, format="mjd").strftime("%Y%m%d")
+    )  # last night
+
+    # AR bands
+    bands = get_ibis_bands()
+
+    # AR folders
+    for name in ["skymap", "expdepth", "obsconds"]:
+        mydir = os.path.join(args.outdir, name)
+        if not os.path.isdir(mydir):
+            os.mkdir(mydir)
+
+    # AR tiles + exposures
+    t, e, ccds = custom_read_tiles_exps_ccds()
+    e.write(allexpsfn, overwrite=True)
+
+    surveys_fields = get_surveys_fields()
+    if args.survey is not None:
+        assert args.survey in surveys_fields
+        surveys = [args.survey]
+    else:
+        surveys = list(surveys_fields.keys())
+    effkey, speedkey = "AR_EFFTIME", "AR_SPEED"
+    depthkey = "PSFDEPTH"
+
+    # goalfits maps
+    if "goalmap" in args.steps.split(","):
+
+        nside = 1024
+        for survey in ["wide"]:
+            for band in bands:
+                outfn = get_filename("goal", args.outdir, survey=survey, band=band)
+                print(outfn)
+                create_wide_goalfn(outfn, band, nside, camera="decam")
+
+    # plot sky
+    if "skymap" in args.steps.split(","):
+
+        # survey / field / band
+        mysurveys, myfields, mybands = [], [], []
+        for survey in surveys:
+            for field in surveys_fields[survey]:
+                for band in bands:
+                    mysurveys.append(survey)
+                    myfields.append(field)
+                    mybands.append(band)
+
+        # tiles
+        myoutpngs = [
+            get_filename("tiles", args.outdir, survey=survey, band=band, field=field)
+            for survey, field, band in zip(mysurveys, myfields, mybands)
+        ]
+        myargs = [
+            (outpng, survey, field, band, t, e)
+            for outpng, survey, field, band in zip(
+                myoutpngs, mysurveys, myfields, mybands
+            )
+        ]
+        pool = multiprocessing.Pool(args.numproc)
+        with pool:
+            _ = pool.starmap(plot_tiles, myargs)
+
+        # depths (only for deep)
+        myoutpngs = [
+            get_filename("depths", args.outdir, survey=survey, band=band, field=field)
+            for survey, field, band in zip(mysurveys, myfields, mybands)
+        ]
+        myargs = [
+            (outpng, survey, field, band, ccds, camera, depthkey)
+            for outpng, survey, field, band in zip(
+                myoutpngs, mysurveys, myfields, mybands
+            )
+            if survey == "deep"
+        ]
+        if len(myargs) > 0:
+            pool = multiprocessing.Pool(args.numproc)
+            with pool:
+                _ = pool.starmap(plot_depths, myargs)
+
+        # wide_sky_cov
+        myargs = [
+            (args.outdir, band, t["LASTNIGHT"].max(), t, "obs", "fraccov")
+            for band in bands
+        ]
+        pool = multiprocessing.Pool(args.numproc)
+        with pool:
+            _ = pool.starmap(plot_wide_skycov, myargs)
+
+    # expnum depths
+    if "expdepth" in args.steps.split(","):
+
+        myargs = [
+            (
+                get_filename("expdepth", args.outdir, night=night),
+                night,
+                ccds,
+                camera,
+                depthkey,
+            )
+            for night in np.unique(ccds["NIGHT"])
+        ]
+        pool = multiprocessing.Pool(args.numproc)
+        with pool:
+            _ = pool.starmap(plot_night_expdepths, myargs)
+
+    # obsconds
+    if "obsconds" in args.steps.split(","):
+
+        myargs = [
+            (
+                get_filename("obsconds", args.outdir, night=night),
+                night,
+                e,
+                camera,
+                effkey,
+                speedkey,
+            )
+            for night in np.unique(e["NIGHT"])
+        ]
+
+        pool = multiprocessing.Pool(args.numproc)
+        with pool:
+            _ = pool.starmap(plot_night_obsconds, myargs)
+
+    # generate html
+    if "html" in args.steps.split(","):
+
+        write_html(args.outdir, t, e, ccds)
+
+
+if __name__ == "__main__":
+    main()
