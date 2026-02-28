@@ -165,6 +165,63 @@ def get_camera_props(camera):
     }[camera]
 
 
+# https://desi.lbl.gov/trac/wiki/DecamLegacy/IBIS/ObservingSchedule
+def get_runs_first_last_nights():
+
+    return {
+        # 2024B
+        1: (20240530, 20240609),
+        2: (20240629, 20240712),
+        3: (20241028, 20241105),
+        4: (20241123, 20241208),
+        # 2025A
+        5: (20250228, 20250303),
+        6: (20250325, 20250330),
+        7: (20250425, 20250429),
+        8: (20250525, 20250529),
+        # 2025B
+        9: (20250922, 20250924),
+        10: (20251014, 20251020),
+        11: (20251210, 20251228),
+        # 2026A
+        12: (20260214, 20260222),
+        13: (20260311, 20260326),
+        14: (20260408, 20260419),
+        15: (20260512, 20260522),
+        16: (20260611, 20260618),
+        17: (20260706, 20260718),
+    }
+
+
+def get_runs_stats(e, runs=None):
+
+    runs_first_last_nights = get_runs_first_last_nights()
+    if runs is None:
+        runs = list(runs_first_last_nights.keys())
+
+    bands = get_ibis_bands()
+
+    d = Table()
+    d["RUN"] = runs
+    d["FIRST_NIGHT"] = [runs_first_last_nights[run][0] for run in runs]
+    d["LAST_NIGHT"] = [runs_first_last_nights[run][1] for run in runs]
+    d["ONSKY_HRS"] = 0.
+    for key in ["NTILE_{}".format(band) for band in bands]:
+        d[key] = 0
+
+    for i, run in enumerate(runs):
+        sel = (e["NIGHT"] >= d["FIRST_NIGHT"][i]) & (e["NIGHT"] <= d["LAST_NIGHT"][i])
+        d["ONSKY_HRS"][i] = np.round(e["EXPTIME"][sel].sum() / 3600, 1)
+        if sel.sum() > 0:
+            for band in bands:
+                sel2 = (sel) & (e["BAND"] == band)
+                tileids = np.unique(e["TILEID"][sel2])
+                d["NTILE_{}".format(band)][i] = tileids.size
+
+    return d
+
+
+
 def get_surveyfield_rows(survey, field, d, d_input, band=None):
 
     assert d_input in ["tiles", "ccds"]
@@ -1316,6 +1373,33 @@ def write_html(outdir, tiles, exps, ccds):
     html.write("\t</tr>" + "\n")
     html.write("\t<br>\n")
     html.write("\t</tr>\n")
+    html.write("</div>\n")
+    html.write("\n")
+
+    # AR Per-run stats
+    stats = get_runs_stats(exps)
+    html.write(
+        "<button type='button' class='collapsible'><strong>Per-run stats</strong></button>\n"
+    )
+    html.write("<div class='content'>\n")
+    #
+    html.write("<table>\n")
+    html.write("\t<tr>\n")
+    html.write("\t</tr>\n")
+    html.write("\t<tr>\n")
+    # AR header
+    for key in stats.colnames:
+        html.write("\t\t<th>{}</th>\n".format(key))
+    html.write("\t</tr>\n")
+    html.write("\t<tr>\n")
+    # AR writing table
+    for i in range(len(stats)):
+        for key in stats.colnames:
+            html.write("\t\t<td> {} </td>\n".format(stats[key][i]))
+        html.write("\t</tr>\n")
+    html.write("</table>\n")
+    html.write("\n")
+    #
     html.write("</div>\n")
     html.write("\n")
 
