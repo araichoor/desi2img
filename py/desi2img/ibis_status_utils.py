@@ -211,7 +211,7 @@ def get_runs_stats(e, runs=None):
 
     for i, run in enumerate(runs):
         sel = (e["NIGHT"] >= d["FIRST_NIGHT"][i]) & (e["NIGHT"] <= d["LAST_NIGHT"][i])
-        d["ONSKY_HRS"][i] = np.round(e["EXPTIME"][sel].sum() / 3600, 1)
+        d["ONSKY_HRS"][i] = float("{:.1f}".format(e["EXPTIME"][sel].sum() / 3600))
         if sel.sum() > 0:
             for band in bands:
                 sel2 = (sel) & (e["BAND"] == band)
