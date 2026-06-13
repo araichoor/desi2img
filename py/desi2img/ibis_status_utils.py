@@ -19,7 +19,7 @@ import healpy as hp
 from astropy.table import Table, vstack
 from astropy.io import fits
 from astropy.time import Time, TimezoneInfo, TimeDelta
-from astropy.coordinates import EarthLocation, SkyCoord, get_moon
+from astropy.coordinates import EarthLocation, SkyCoord
 from astropy import units as u
 from pytz import timezone
 
