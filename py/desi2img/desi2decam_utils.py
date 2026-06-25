@@ -60,6 +60,8 @@ def get_megacam_ccdnames():
         "9172-2-4", "8352-6-4", "8352-3-5", "8261-15-5"
     ]
 
+def get_megacam_pixscale():
+    return 0.187
 
 def read_yaml(fn):
     with open(fn, "r") as file:
