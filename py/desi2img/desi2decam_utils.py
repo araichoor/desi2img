@@ -63,6 +63,11 @@ def get_megacam_ccdnames():
 def get_megacam_pixscale():
     return 0.187
 
+# approx. conservative (i.e. larger than real)
+def get_megacam_radius():
+    0.57
+
+
 def read_yaml(fn):
     with open(fn, "r") as file:
         config = yaml.safe_load(file)
