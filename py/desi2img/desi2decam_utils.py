@@ -15,6 +15,7 @@ import numpy as np
 import healpy as hp
 from scipy.spatial import Delaunay
 from desimodel.footprint import tiles2pix
+from desispec.tile_qa_plot import get_quantz_cmap
 from desiutil.log import get_logger
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
@@ -28,34 +29,6 @@ import multiprocessing
 
 log = get_logger()
 nest = True
-
-
-def get_quantz_cmap(name, n, cmin=0, cmax=1):
-    """
-    Creates a quantized colormap.
-
-
-    Args:
-        name: matplotlib colormap name (e.g. "tab20") (string)
-        n: number of colors
-        cmin (optional, defaults to 0): first color of the original colormap to use (between 0 and 1) (float)
-        cmax (optional, defaults to 1): last color of the original colormap to use (between 0 and 1) (float)
-
-
-    Returns:
-        A matplotlib cmap object.
-
-
-    Notes:
-        https://matplotlib.org/examples/api/colorbar_only.html
-    """
-    cmaporig = matplotlib.cm.get_cmap(name)
-    mycol = cmaporig(np.linspace(cmin, cmax, n))
-    cmap = matplotlib.colors.ListedColormap(mycol)
-    cmap.set_under(mycol[0])
-    cmap.set_over(mycol[-1])
-    return cmap
-
 
 def get_decam_ccdnames():
     NSs = np.array(["S" for x in range(1, 32)] + ["N" for x in range(1, 32)])
