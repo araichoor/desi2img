@@ -20,7 +20,6 @@ from desi2decam_utils import (
     get_init_tiles,
     get_ccdnames,
     get_ref_radecs,
-    get_tile_nccds,
     create_rands,
     compute_nccds,
     update_nccds_fns,

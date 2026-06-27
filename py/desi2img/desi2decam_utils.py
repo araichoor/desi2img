@@ -391,12 +391,14 @@ def get_nccds(radecs, ccds_radecs):
 
 
 def get_tile_nccds(
-    tilera, tiledec, ref_radecs, ref_tilera, ref_tiledec, ras, decs, pixs, nside, inflate_ra_factor,
+    camera, tilera, tiledec, ref_radecs, ref_tilera, ref_tiledec, ras, decs, pixs, nside, inflate_ra_factor,
 ):
+
+    assert camera in allowed_cameras
 
     #print("get_tile_nccds(): tilera, tiledec, ref_tilera, ref_tiledec, inflate_ra_factor: ",tilera, tiledec, ref_tilera, ref_tiledec, inflate_ra_factor) 
 
-    decam_radius = get_radius("decam")
+    camera_radius = get_radius(camera)
 
     # ccds corners
     ccds_radecs = get_tile_ccds_radecs(
@@ -404,7 +406,7 @@ def get_tile_nccds(
     )
 
     # pixels overlapping the tile
-    tpixs = get_tiles_pixs("decam", tilera, tiledec, nside, inflate_ra_factor, trad=decam_radius)
+    tpixs = get_tiles_pixs(camera, tilera, tiledec, nside, inflate_ra_factor, trad=camera_radius)
     #tiles = Table()
     #tiles["RA"], tiles["DEC"] = [tilera], [tiledec]
     #tpixs = tiles2pix(nside, tiles=tiles, radius=decam_radius)
@@ -434,6 +436,7 @@ def get_rands_fn_tiles_nccds(
     ii = []
     for i, (tilera, tiledec) in enumerate(zip(tileras, tiledecs)):
         nccds_i = get_tile_nccds(
+            "decam",
             tilera,
             tiledec,
             ref_radecs,
