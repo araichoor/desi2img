@@ -425,10 +425,12 @@ def get_tile_nccds(
 # get the nccds values for a given rands_fn file
 #   for a set of tiles
 def get_rands_fn_tiles_nccds(
-    rands_fn, tileras, tiledecs, ref_radecs, ref_tilera, ref_tiledec, inflate_ra_factor,
+    camera, rands_fn, tileras, tiledecs, ref_radecs, ref_tilera, ref_tiledec, inflate_ra_factor,
 ):
 
-    # print("get_rands_fn_tiles_nccds(): rands_fn, tileras.size, inflate_ra_factor: ", rands_fn, tileras.size, inflate_ra_factor)
+    assert camera in allowed_cameras
+
+    # print("get_rands_fn_tiles_nccds(): camera, rands_fn, tileras.size, inflate_ra_factor: ", rands_fn, tileras.size, inflate_ra_factor)
 
     d = fitsio.read(rands_fn)
     nside = fitsio.read_header(rands_fn, 1)["HPXNSIDE"]
@@ -436,7 +438,7 @@ def get_rands_fn_tiles_nccds(
     ii = []
     for i, (tilera, tiledec) in enumerate(zip(tileras, tiledecs)):
         nccds_i = get_tile_nccds(
-            "decam",
+            camera,
             tilera,
             tiledec,
             ref_radecs,
@@ -654,7 +656,7 @@ def compute_nccds(rands_fns, t, config, numproc, trad=None):
     for fn, pix in zip(rands_fns, pixs):
         pixt = pixts[pix]
         tileras, tiledecs = pixt["RA"], pixt["DEC"]
-        myargs.append((fn, tileras, tiledecs, ref_radecs, ref_tilera, ref_tiledec, config["inflate_ra_factor"]))
+        myargs.append(("decam", fn, tileras, tiledecs, ref_radecs, ref_tilera, ref_tiledec, config["inflate_ra_factor"]))
     pool = multiprocessing.Pool(processes=numproc)
     with pool:
         all_outputs = pool.starmap(get_rands_fn_tiles_nccds, myargs)
