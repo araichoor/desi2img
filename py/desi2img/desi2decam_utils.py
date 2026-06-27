@@ -928,6 +928,7 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
     #
     outdir = config["outdir"]
     tilesfn = config["tilesfn"]
+    camera = config["camera"]
     metric_num = config["metric_num"]
     anneal_tallow_rad = config["anneal_tallow_rad"]
     anneal_niter = config["anneal_niter"]
@@ -938,7 +939,7 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
     inflate_ra_factor = config["inflate_ra_factor"]
 
     np.random.seed(np_rand_seed)
-    trad = get_radius("decam")
+    trad = get_radius(camera)
 
     # read rands catalogs
     # TODO: indiv. rands files can be read in parallel
@@ -958,7 +959,7 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
         tnside = 512
         d.meta["HPXNSIDE"], d.meta["HPXNEST"] = tnside, nest
         orig_t = get_init_tiles(config)
-        d["HPXPIXEL"] = get_anneal_allowtpixs("decam", orig_t, tnside, inflate_ra_factor, trad=anneal_tallow_rad)
+        d["HPXPIXEL"] = get_anneal_allowtpixs(camera, orig_t, tnside, inflate_ra_factor, trad=anneal_tallow_rad)
         d.write(fn)
     d = Table.read(fn)
     tnside = d.meta["HPXNSIDE"]
@@ -968,7 +969,7 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
     # reference ccds
     ccd_names = hdr["CCDNAMES"].split(",")
     ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(
-        "decam",
+        camera,
         ccd_names,
         config["npix_msk_xstart"],
         config["npix_msk_xend"],
@@ -1048,7 +1049,7 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
 
                 # touched rands pixels
                 # consider *both* old + new tiles
-                new_rpixs = get_tiles_pixs("decam", [t["RA"][i], new_tra], [t["DEC"][i], new_tdec], rnside, inflate_ra_factor)
+                new_rpixs = get_tiles_pixs(camera, [t["RA"][i], new_tra], [t["DEC"][i], new_tdec], rnside, inflate_ra_factor)
                 # restrict to "existing" pixels [as some may have been discarded,
                 #   as no rands had NCCD>0 for the initial tiling)
                 sel = np.in1d(new_rpixs, pixs)
@@ -1104,10 +1105,10 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
             # we can deal with all of them at once because there
             # is no overlapping tiles in old_t, neither in new_t
             #tmpstart = time()
-            touched_rands_old_nccds, _ = compute_nccds("decam", touched_rands_fns, old_t, config, numproc)
+            touched_rands_old_nccds, _ = compute_nccds(camera, touched_rands_fns, old_t, config, numproc)
             #print("i_iter={}\t{:.1f}s".format(i_iter, time() - tmpstart))
             #tmpstart = time()
-            touched_rands_new_nccds, _ = compute_nccds("decam", touched_rands_fns, new_t, config, numproc)
+            touched_rands_new_nccds, _ = compute_nccds(camera, touched_rands_fns, new_t, config, numproc)
             #print("i_iter={}\t{:.1f}s".format(i_iter, time() - tmpstart))
 
             #fig, ax = plt.subplots(figsize=(15, 10))
@@ -1116,10 +1117,10 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
                 # print(j)
 
                 # rands pixels touched by the "old" + "new" tiles
-                old_pixs_j = get_tiles_pixs("decam", old_t["RA"][j], old_t["DEC"][j], rnside, inflate_ra_factor, trad=trad)
+                old_pixs_j = get_tiles_pixs(camera, old_t["RA"][j], old_t["DEC"][j], rnside, inflate_ra_factor, trad=trad)
                 sel = np.in1d(old_pixs_j, pixs)
                 old_pixs_j = old_pixs_j[sel]
-                new_pixs_j = get_tiles_pixs("decam", new_t["RA"][j], new_t["DEC"][j], rnside, inflate_ra_factor, trad=trad)
+                new_pixs_j = get_tiles_pixs(camera, new_t["RA"][j], new_t["DEC"][j], rnside, inflate_ra_factor, trad=trad)
                 sel = np.in1d(new_pixs_j, pixs)
                 new_pixs_j = new_pixs_j[sel]
                 oldnew_unq_pixs_j = np.unique(old_pixs_j.tolist() + new_pixs_j.tolist())
