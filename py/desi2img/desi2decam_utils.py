@@ -107,7 +107,7 @@ def get_ref_fn(camera):
     return fn
 
 
-def plot_decam_radec_ccds(ax, ccds, ra_wrap_center=0, print_ccd_names=True):
+def plot_radec_ccds(ax, ccds, ra_wrap_center=0, print_ccd_names=True):
 
     dowrap = False
     for name in ccds:

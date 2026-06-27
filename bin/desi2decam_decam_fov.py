@@ -7,7 +7,7 @@ from desi2decam_utils import (
     get_ccdnames,
     get_ref_radecs,
     get_tile_ccds_radecs,
-    plot_decam_radec_ccds,
+    plot_radec_ccds,
 )
 import matplotlib
 from matplotlib import pyplot as plt
@@ -65,7 +65,7 @@ def main():
         ccds = get_tile_ccds_radecs(tilera, tiledec, ref_radecs, ref_tilera, ref_tiledec, inflate_ra_factor)
 
         fig, ax = plt.subplots()
-        plot_decam_radec_ccds(ax, ccds)
+        plot_radec_ccds(ax, ccds)
         ax.set_title(
             "Black_CCD = {}, Npix_mask = {}, Inflate_ra = {}".format(
                 black_ccd_names, npix_msk, inflate_ra_factor,
