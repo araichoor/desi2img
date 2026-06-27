@@ -147,7 +147,7 @@ def get_ref_hdrs(camera, ccd_names, ref_fn=None):
 
     h = fits.open(ref_fn)
     exts = np.array([h[i].header["EXTNAME"] for i in range(1, len(h))])
-    assert np.all(np.in1d(ccd_names, exts))
+    assert np.all(np.isin(ccd_names, exts))
     # use the CRVAL{1,2} of the first ccd; the CRVAL{1,2} values are the same
     #   for all CCDs, it is just the image center
     # not using CENT{RA,DEC} from the 0-extension, because it is rounded
@@ -412,7 +412,7 @@ def get_tile_nccds(
     #tpixs = tiles2pix(nside, tiles=tiles, radius=decam_radius)
 
     # points inside those pixels
-    ii = np.where(np.in1d(pixs, tpixs))[0]
+    ii = np.where(np.isin(pixs, tpixs))[0]
     # print("get_tile_nccds(): {:.2f}\t{:.2f}\t{}\t{:0f} deg".format(tilera, tiledec, inflate_ra_factor, ii.size/1000))
 
     radecs = np.array([ras, decs]).T
@@ -639,7 +639,7 @@ def compute_nccds(camera, rands_fns, t, config, numproc, trad=None):
         # print(i, t["TILEID"][i], t["RA"][i], t["DEC"][i], "{:.2f} deg2".format(tpixs_i.size*hp.nside2pixarea(nside,degrees=True)))
         # handle case where we ve discarded a pixel because
         # it was not containing any rands with NCCD>0
-        sel = np.in1d(tpixs_i, pixs)
+        sel = np.isin(tpixs_i, pixs)
         tpixs_i = tpixs_i[sel]
         #tiles_i = Table()
         #tiles_i["RA"], tiles_i["DEC"] = [t["RA"][i]], [t["DEC"][i]]
@@ -671,7 +671,7 @@ def compute_nccds(camera, rands_fns, t, config, numproc, trad=None):
     for (pix, ii) in zip(pixs, all_iis):
         tids += pixts[pix]["TMPTILEID"][ii].tolist()
     tids = np.unique(tids)
-    tsel = np.in1d(t["TMPTILEID"], tids)
+    tsel = np.isin(t["TMPTILEID"], tids)
 
     t.remove_column("TMPTILEID")
 
@@ -1052,7 +1052,7 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
                 new_rpixs = get_tiles_pixs(camera, [t["RA"][i], new_tra], [t["DEC"][i], new_tdec], rnside, inflate_ra_factor)
                 # restrict to "existing" pixels [as some may have been discarded,
                 #   as no rands had NCCD>0 for the initial tiling)
-                sel = np.in1d(new_rpixs, pixs)
+                sel = np.isin(new_rpixs, pixs)
                 new_rpixs = new_rpixs[sel]
 
                 # to check allow_tpixs
@@ -1065,7 +1065,7 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
 
                 # offset tile ok?
                 ok = (
-                    (np.in1d(new_rpixs, touched_rpixs).sum() == 0)
+                    (np.isin(new_rpixs, touched_rpixs).sum() == 0)
                     &
                     (new_tpix in allow_tpixs)
                 )
@@ -1118,10 +1118,10 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
 
                 # rands pixels touched by the "old" + "new" tiles
                 old_pixs_j = get_tiles_pixs(camera, old_t["RA"][j], old_t["DEC"][j], rnside, inflate_ra_factor, trad=trad)
-                sel = np.in1d(old_pixs_j, pixs)
+                sel = np.isin(old_pixs_j, pixs)
                 old_pixs_j = old_pixs_j[sel]
                 new_pixs_j = get_tiles_pixs(camera, new_t["RA"][j], new_t["DEC"][j], rnside, inflate_ra_factor, trad=trad)
-                sel = np.in1d(new_pixs_j, pixs)
+                sel = np.isin(new_pixs_j, pixs)
                 new_pixs_j = new_pixs_j[sel]
                 oldnew_unq_pixs_j = np.unique(old_pixs_j.tolist() + new_pixs_j.tolist())
 

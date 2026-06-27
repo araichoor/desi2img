@@ -237,7 +237,7 @@ def main():
         start = time()
         print("len(touched_rands_fns) = ", len(touched_rands_fns))
         print("np.unique(touched_rands_fns).size = ", np.unique(touched_rands_fns).size)
-        print("np.in1d(touched_rands_fns, rands_fns).sum() = ", np.in1d(touched_rands_fns, rands_fns).sum())
+        print("np.isin(touched_rands_fns, rands_fns).sum() = ", np.isin(touched_rands_fns, rands_fns).sum())
         ii = match_to(rands_fns, touched_rands_fns)
         assert np.all(rands_fns[ii] == touched_rands_fns)
         touched_nccds = all_nccds[ii]
