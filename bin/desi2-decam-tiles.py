@@ -29,8 +29,7 @@ def main():
     d.meta["INFL_RA"] = inflate_factor_ra
 
     d["HPXPIXEL"] = np.arange(hp.nside2npix(nside), dtype=int)
-    thetas, phis = hp.pix2ang(nside, d["HPXPIXEL"], nest=nest)
-    d["RA"], d["DEC"] = np.degrees(phis), 90.0 - np.degrees(thetas)
+    d["RA"], d["DEC"] = hp.pix2ang(nside, d["HPXPIXEL"], nest=nest, lonlat=True)
     d["HPXPASS"], d["RA_OFFSET"], d["DEC_OFFSET"] = 0, 0., 0.
 
     # actually cut at 35.8, instead of 36, so that we remove a

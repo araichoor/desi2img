@@ -343,8 +343,7 @@ def get_tiles_pixs(camera, tileras, tiledecs, nside, inflate_ra_factor, trad=Non
         # all pixels
         npix = hp.nside2npix(nside)
         pixs = np.arange(npix, dtype=int)
-        thetas, phis = hp.pix2ang(nside, pixs, nest=nest)
-        ras, decs = np.degrees(phis), 90.0 - np.degrees(thetas)
+        ras, decs = hp.pix2ang(nside, pixs, nest=nest, lonlat=True)
 
         # safe: extend the radius by one half of pixel size
         pix_radius_deg = hp.nside2resol(nside, arcmin=True) / 60.
@@ -585,7 +584,7 @@ def create_rands(
     log.info("nrand = {}".format(len(d)))
 
     d["HPXPIXEL"] = hp.ang2pix(
-        nside, np.radians(90.0 - d["DEC"]), np.radians(d["RA"]), nest=nest
+        nside, d["RA"], d["DEC"], nest=nest, lonlat=True
     )
     d["NCCD"] = 0
     unq_pixs = np.unique(d["HPXPIXEL"])
@@ -815,8 +814,7 @@ def get_anneal_allowtpixs(camera, t, nside, inflate_ra_factor, trad=None):
         resol = hp.nside2resol(nside, arcmin=True) / 60.0
         nlayer = int(np.ceil(trad * inflate_ra_factor/ resol))
 
-        thetas, phis = hp.pix2ang(nside, np.arange(npix, dtype=int), nest=nest)
-        ras, decs = np.degrees(phis), 90.0 - np.degrees(thetas)
+        ras, decs = hp.pix2ang(nside, np.arange(npix, dtype=int), nest=nest, lonlat=True)
         cs = SkyCoord(ras * u.degree, decs * u.degree, frame="icrs")
 
         tcs = SkyCoord(t["RA"] * u.degree, t["DEC"] * u.degree, frame="icrs")
@@ -1058,8 +1056,9 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
                 # to check allow_tpixs
                 new_tpix = hp.ang2pix(
                     tnside,
-                    np.radians(90.0 - new_tdec),
-                    np.radians(new_tra),
+                    new_tra,
+                    new_tdec,
+                    lonlat=True,
                     nest=nest,
                 )
 
