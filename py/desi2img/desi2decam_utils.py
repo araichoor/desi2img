@@ -796,11 +796,11 @@ def get_init_tiles(config):
     return t
 
 
-def get_anneal_allowtpixs(t, nside, inflate_ra_factor, trad=None):
+def get_anneal_allowtpixs(camera, t, nside, inflate_ra_factor, trad=None):
 
     # trad : degrees
     if trad is None:
-        trad = get_radius("decam")
+        trad = get_radius(camera)
 
     npix = hp.nside2npix(nside)
 
@@ -823,7 +823,7 @@ def get_anneal_allowtpixs(t, nside, inflate_ra_factor, trad=None):
 
         # pixels overlapping the tiles
         # pixs = tiles2pix(nside, tiles=t, radius=trad)
-        pixs = get_tiles_pixs("decam", t["RA"], t["DEC"], nside, inflate_ra_factor, trad=None)
+        pixs = get_tiles_pixs(camera, t["RA"], t["DEC"], nside, inflate_ra_factor, trad=None)
 
         # "enlarge" the boundaries far enough to include
         for i in range(nlayer):
@@ -958,7 +958,7 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
         tnside = 512
         d.meta["HPXNSIDE"], d.meta["HPXNEST"] = tnside, nest
         orig_t = get_init_tiles(config)
-        d["HPXPIXEL"] = get_anneal_allowtpixs(orig_t, tnside, inflate_ra_factor, trad=anneal_tallow_rad)
+        d["HPXPIXEL"] = get_anneal_allowtpixs("decam", orig_t, tnside, inflate_ra_factor, trad=anneal_tallow_rad)
         d.write(fn)
     d = Table.read(fn)
     tnside = d.meta["HPXNSIDE"]
