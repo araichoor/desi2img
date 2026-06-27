@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord
 from astropy import units
 import matplotlib.pyplot as plt
 from desi2decam_io import (
-    get_decam_ccdnames,
+    get_ccdnames,
     # get_ref_hdrs,
     get_ref_radecs,
     get_tile_ccds_radecs,
@@ -39,7 +39,7 @@ def main():
     args = parse()
 
     #
-    all_ccd_names = get_decam_ccdnames()
+    all_ccd_names = get_ccdnames("decam")
     ccd_names = np.array([_ for _ in all_ccd_names if _ not in args.black_ccd_names.split(",")])
 
     # ref_tilera, ref_tiledec, ref_hdrs = get_ref_hdrs(ccd_names)

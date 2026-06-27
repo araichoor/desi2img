@@ -30,27 +30,18 @@ import multiprocessing
 log = get_logger()
 nest = True
 
-def get_decam_ccdnames():
-    NSs = np.array(["S" for x in range(1, 32)] + ["N" for x in range(1, 32)])
-    nums = np.array([x for x in range(1, 32)] + [x for x in range(1, 32)])
-    names = np.array(["{}{}".format(NS, num) for NS, num in zip(NSs, nums)])
-    return names
+allowed_cameras = ["decam", "megacam"]
 
+def get_ccdnames(camera):
+    assert camera in allowed_cameras
 
-# https://noirlab.edu/science/sites/default/files/media/archives/documents/scidoc0436.pdf
-# taking value at center..
-def get_decam_pixscale():
-    return 0.2637
+    if camera == "decam":
+        NSs = np.array(["S" for x in range(1, 32)] + ["N" for x in range(1, 32)])
+        nums = np.array([x for x in range(1, 32)] + [x for x in range(1, 32)])
+        names = np.array(["{}{}".format(NS, num) for NS, num in zip(NSs, nums)])
 
-
-# approx. conservative (i.e. larger than real)
-def get_decam_radius():
-    return 1.1
-
-
-# from 2786423p.fits.fz
-def get_megacam_ccdnames():
-    return [
+    if camera == "megacam":
+        names = [
         "8341-7-5", "8352-3-4", "8352-15-3", "8261-14-4", "8341-17-4", "8351-20-5",
         "8351-13-3", "8351-6-3", "8261-13-3", "9172-1-3", "8352-4-4", "8352-15-5",
         "8351-20-4", "8351-17-3", "8434-13-5", "8341-17-3", "8351-11-4", "7432-19-3",
@@ -60,13 +51,36 @@ def get_megacam_ccdnames():
         "9172-2-4", "8352-6-4", "8352-3-5", "8261-15-5"
     ]
 
-def get_megacam_pixscale():
-    return 0.187
+    return names
+
+
+# https://noirlab.edu/science/sites/default/files/media/archives/documents/scidoc0436.pdf
+# taking value at center..
+def get_pixscale(camera):
+
+    assert camera in allowed_cameras
+
+    if camera == "decam":
+        pixscale = 0.2637
+
+    if camera == "megacam":
+        pixscale = 0.187
+
+    return pixscale
+
 
 # approx. conservative (i.e. larger than real)
-def get_megacam_radius():
-    0.57
+def get_radius(camera):
 
+    assert camera in allowed_cameras
+
+    if camera == "decam":
+        radius = 1.1
+
+    if camera == "megacam":
+        radius = 0.57
+
+    return radius
 
 def read_yaml(fn):
     with open(fn, "r") as file:
@@ -226,7 +240,7 @@ def radec2vec(ras, decs):
 """
 def get_tiles_pixs(tileras, tiledecs, nside, trad=None):
     if trad is None:
-        trad = get_decam_radius()
+        trad = get_radius("decam")
     tiles = Table()
     tiles["RA"], tiles["DEC"] = np.atleast_1d(tileras), np.atleast_1d(tiledecs)
     tpixs = tiles2pix(nside, tiles=tiles, radius=trad)
@@ -309,7 +323,7 @@ def get_tiles_pixs(tileras, tiledecs, nside, inflate_ra_factor, trad=None):
     ntile = len(tras)
 
     if trad is None:
-        trad = get_decam_radius()
+        trad = get_radius("decam")
 
     # no inflate case, simple
     if inflate_ra_factor == 1.:
@@ -375,7 +389,7 @@ def get_tile_nccds(
 
     #print("get_tile_nccds(): tilera, tiledec, ref_tilera, ref_tiledec, inflate_ra_factor: ",tilera, tiledec, ref_tilera, ref_tiledec, inflate_ra_factor) 
 
-    decam_radius = get_decam_radius()
+    decam_radius = get_radius("decam")
 
     # ccds corners
     ccds_radecs = get_tile_ccds_radecs(
@@ -583,7 +597,7 @@ def compute_nccds(rands_fns, t, config, numproc, trad=None):
 
     if trad is None:
 
-        trad =  get_decam_radius()
+        trad =  get_radius("decam")
 
     t["TMPTILEID"] = np.arange(len(t), dtype=int)
 
@@ -722,7 +736,7 @@ def get_init_tiles(config):
     anneal_rmax = config["anneal_rmax"]
     anneal_tedge_freeze = config["anneal_tedge_freeze"]
 
-    decam_radius = get_decam_radius()
+    decam_radius = get_radius("decam")
 
     t = Table.read(tilesfn)
     if "TILEID" not in t.colnames:
@@ -771,7 +785,7 @@ def get_anneal_allowtpixs(t, nside, inflate_ra_factor, trad=None):
 
     # trad : degrees
     if trad is None:
-        trad = get_decam_radius()
+        trad = get_radius("decam")
 
     npix = hp.nside2npix(nside)
 
@@ -909,7 +923,7 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
     inflate_ra_factor = config["inflate_ra_factor"]
 
     np.random.seed(np_rand_seed)
-    trad = get_decam_radius()
+    trad = get_radius("decam")
 
     # read rands catalogs
     # TODO: indiv. rands files can be read in parallel

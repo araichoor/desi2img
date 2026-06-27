@@ -18,7 +18,7 @@ from astropy.table import Table, vstack
 from desi2decam_utils import (
     read_yaml,
     get_init_tiles,
-    get_decam_ccdnames,
+    get_ccdnames,
     get_ref_radecs,
     get_tile_nccds,
     create_rands,
@@ -103,7 +103,7 @@ def main():
         t_fn = os.path.join(outdir, "tiles-anneal-iter{:06d}.fits".format(0))
 
         #
-        all_ccd_names = get_decam_ccdnames()
+        all_ccd_names = get_ccdnames("decam")
         ccd_names = np.array(
             [_ for _ in all_ccd_names if _ not in black_ccd_names.split(",")]
         )

@@ -4,8 +4,7 @@ import os
 import numpy as np
 from astropy.table import Table, vstack
 from desi2decam_utils import (
-    get_decam_radius,
-    get_decam_ccdnames,
+    get_ccdnames,
     get_ref_radecs,
     get_tile_ccds_radecs,
     plot_decam_radec_ccds,
@@ -38,7 +37,7 @@ def main():
     args = parse()
 
     tilera, tiledec = 0., 0.
-    all_ccd_names = get_decam_ccdnames()
+    all_ccd_names = get_ccdnames("decam")
     black_ccd_names = "N30,S7"
 
     for npix_msk, inflate_ra_factor in zip(

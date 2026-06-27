@@ -14,7 +14,7 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u
 from desi2decam_utils import (
     read_yaml,
-    get_decam_ccdnames,
+    get_ccdnames,
     get_ref_radecs,
     create_rands,
     compute_nccds,
@@ -149,7 +149,7 @@ def main():
     start = time()
 
     #
-    all_ccd_names = get_decam_ccdnames()
+    all_ccd_names = get_ccdnames("decam")
     ccd_names = np.array(
         [_ for _ in all_ccd_names if _ not in black_ccd_names.split(",")]
     )

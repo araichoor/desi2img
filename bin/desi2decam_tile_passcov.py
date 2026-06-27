@@ -7,8 +7,8 @@ import tempfile
 import numpy as np
 from astropy.table import Table, vstack
 from desi2decam_utils import (
-    get_decam_radius,
-    get_decam_ccdnames,
+    get_radius,
+    get_ccdnames,
     get_ref_radecs,
     create_rands,
     compute_nccds,
@@ -85,7 +85,7 @@ def main():
     start = time()
 
     #
-    all_ccd_names = get_decam_ccdnames()
+    all_ccd_names = get_ccdnames("decam")
     ccd_names = np.array(
         [_ for _ in all_ccd_names if _ not in black_ccd_names.split(",")]
     )
@@ -98,7 +98,7 @@ def main():
         config["npix_msk_yend"],
     )
 
-    decam_radius = get_decam_radius()
+    decam_radius = get_radius("decam")
     create_rands(
         tmpoutdir,
         randdens,
