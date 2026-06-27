@@ -605,11 +605,13 @@ def create_rands(
     pool.close()
 
 
-def compute_nccds(rands_fns, t, config, numproc, trad=None):
+def compute_nccds(camera, rands_fns, t, config, numproc, trad=None):
+
+    assert camera in allowed_cameras
 
     if trad is None:
 
-        trad =  get_radius("decam")
+        trad = get_radius(camera)
 
     t["TMPTILEID"] = np.arange(len(t), dtype=int)
 
@@ -619,7 +621,7 @@ def compute_nccds(rands_fns, t, config, numproc, trad=None):
     ccd_names = hdr["CCDNAMES"].split(",")
     # log.info("ccd_names : {}".format(",".join(ccd_names)))
     ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(
-        "decam",
+        camera,
         ccd_names,
         config["npix_msk_xstart"],
         config["npix_msk_xend"],
@@ -633,7 +635,7 @@ def compute_nccds(rands_fns, t, config, numproc, trad=None):
     # for each pixel, list what tiles do overlap
     pixits = {pix: [] for pix in pixs}
     for i in range(len(t)):
-        tpixs_i = get_tiles_pixs("decam", t["RA"][i], t["DEC"][i], nside, config["inflate_ra_factor"], trad=trad)
+        tpixs_i = get_tiles_pixs(camera, t["RA"][i], t["DEC"][i], nside, config["inflate_ra_factor"], trad=trad)
         # print(i, t["TILEID"][i], t["RA"][i], t["DEC"][i], "{:.2f} deg2".format(tpixs_i.size*hp.nside2pixarea(nside,degrees=True)))
         # handle case where we ve discarded a pixel because
         # it was not containing any rands with NCCD>0
@@ -656,7 +658,7 @@ def compute_nccds(rands_fns, t, config, numproc, trad=None):
     for fn, pix in zip(rands_fns, pixs):
         pixt = pixts[pix]
         tileras, tiledecs = pixt["RA"], pixt["DEC"]
-        myargs.append(("decam", fn, tileras, tiledecs, ref_radecs, ref_tilera, ref_tiledec, config["inflate_ra_factor"]))
+        myargs.append((camera, fn, tileras, tiledecs, ref_radecs, ref_tilera, ref_tiledec, config["inflate_ra_factor"]))
     pool = multiprocessing.Pool(processes=numproc)
     with pool:
         all_outputs = pool.starmap(get_rands_fn_tiles_nccds, myargs)
@@ -1102,10 +1104,10 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
             # we can deal with all of them at once because there
             # is no overlapping tiles in old_t, neither in new_t
             #tmpstart = time()
-            touched_rands_old_nccds, _ = compute_nccds(touched_rands_fns, old_t, config, numproc)
+            touched_rands_old_nccds, _ = compute_nccds("decam", touched_rands_fns, old_t, config, numproc)
             #print("i_iter={}\t{:.1f}s".format(i_iter, time() - tmpstart))
             #tmpstart = time()
-            touched_rands_new_nccds, _ = compute_nccds(touched_rands_fns, new_t, config, numproc)
+            touched_rands_new_nccds, _ = compute_nccds("decam", touched_rands_fns, new_t, config, numproc)
             #print("i_iter={}\t{:.1f}s".format(i_iter, time() - tmpstart))
 
             #fig, ax = plt.subplots(figsize=(15, 10))

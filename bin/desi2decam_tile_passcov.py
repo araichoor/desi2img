@@ -145,7 +145,7 @@ def main():
     nccds = {}
     for passid in passids:
         sel = t["PASS"] == passid
-        tmpnccds, _ = compute_nccds(rands_fns, t[sel], config, args.numproc)
+        tmpnccds, _ = compute_nccds("decam", rands_fns, t[sel], config, args.numproc)
         nccds[passid] = np.hstack([_ for _ in tmpnccds])
     log.info("compute_nccds: {:.1f}s".format(time() - start))
 

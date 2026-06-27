@@ -140,7 +140,7 @@ def main():
         # nccds
         start = time()
         rands_fns = np.sort(glob(os.path.join(outdir, "rands", "rands-hp-*.fits")))
-        all_nccds, tsel = compute_nccds(rands_fns, t, config, args.numproc)
+        all_nccds, tsel = compute_nccds("decam", rands_fns, t, config, args.numproc)
         log.info("compute_nccds: {:.1f}s".format(time() - start))
 
         # update NCCD file values

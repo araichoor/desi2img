@@ -181,7 +181,7 @@ def main():
 
     # nccds
     start = time()
-    all_nccds, _ = compute_nccds(rands_fns, t, config, args.numproc)
+    all_nccds, _ = compute_nccds("decam", rands_fns, t, config, args.numproc)
     print("len(all_nccds) = ", len(all_nccds))
     r["NCCD"] = np.hstack([_ for _ in all_nccds])
     print(r["NCCD"].mean(), np.median(r["NCCD"]))
