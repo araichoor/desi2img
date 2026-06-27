@@ -138,19 +138,21 @@ def plot_radec_ccds(ax, ccds, ra_wrap_center=0, print_ccd_names=True):
         ax.add_artist(pp)
 
 
-def get_ref_hdrs(ccd_names, ref_fn=None):
+def get_ref_hdrs(camera, ccd_names, ref_fn=None):
+
+    assert camera in allowed_cameras
 
     if ref_fn is None:
-        ref_fn = get_ref_fn("decam")
+        ref_fn = get_ref_fn(camera)
 
     h = fits.open(ref_fn)
     exts = np.array([h[i].header["EXTNAME"] for i in range(1, len(h))])
     assert np.all(np.in1d(ccd_names, exts))
-    # use the CRVAL{1,2} of S1; the CRVAL{1,2} values are the same
+    # use the CRVAL{1,2} of the first ccd; the CRVAL{1,2} values are the same
     #   for all CCDs, it is just the image center
     # not using CENT{RA,DEC} from the 0-extension, because it is rounded
     # ref_ra, ref_dec = h[1].header["CENTRA"], h[0].header["CENTDEC"]
-    ref_ra, ref_dec = h["S1"].header["CRVAL1"], h["S1"].header["CRVAL2"]
+    ref_ra, ref_dec = h[ccd_names[0]].header["CRVAL1"], h[ccd_names[0]].header["CRVAL2"]
     ref_hdrs = {ccd_name: h[ccd_name].header for ccd_name in ccd_names}
 
     return ref_ra, ref_dec, ref_hdrs
