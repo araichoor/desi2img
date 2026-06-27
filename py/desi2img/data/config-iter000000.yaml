@@ -11,6 +11,7 @@ rnside: 32
 # tiles
 tilesfn : "/global/cfs/cdirs/desi/users/raichoor/desi2decam/tiles-20240528-ra10x/desi2-decam-tiles-20240528-ra10x.fits"
 # ccds
+camera : "decam"
 black_ccd_names : "N30,S7"
 npix_msk_xstart : 33
 npix_msk_xend : 33

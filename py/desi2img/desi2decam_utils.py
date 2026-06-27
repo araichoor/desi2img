@@ -751,7 +751,7 @@ def get_init_tiles(config):
     anneal_rmax = config["anneal_rmax"]
     anneal_tedge_freeze = config["anneal_tedge_freeze"]
 
-    decam_radius = get_radius("decam")
+    camera_radius = get_radius(config["camera"])
 
     t = Table.read(tilesfn)
     if "TILEID" not in t.colnames:
@@ -766,15 +766,15 @@ def get_init_tiles(config):
         log.info("(ramin,ramax) = (0,360) -> ignore anneal_rmax for ra")
     # TODO: handle ra=0  boundary...
     else:
-        sel &= t["RA"] - ramin > (decam_radius + inflate_ra_factor * anneal_rmax) / np.cos(np.radians(t["DEC"]))
-        sel &= t["RA"] - ramax < -(decam_radius + inflate_ra_factor * anneal_rmax) / np.cos(
+        sel &= t["RA"] - ramin > (camera_radius + inflate_ra_factor * anneal_rmax) / np.cos(np.radians(t["DEC"]))
+        sel &= t["RA"] - ramax < -(camera_radius + inflate_ra_factor * anneal_rmax) / np.cos(
             np.radians(t["DEC"])
         )
     if (decmin == -90.) & (decmax == 90):
         log.info("(decmin,decmax) = (-90, 90) -> ignore anneal_rmax for dec")
     else:
-        sel &= t["DEC"] - decmin > decam_radius + anneal_rmax
-        sel &= t["DEC"] - decmax < -(decam_radius + anneal_rmax)
+        sel &= t["DEC"] - decmin > camera_radius + anneal_rmax
+        sel &= t["DEC"] - decmax < -(camera_radius + anneal_rmax)
 
     log.info("select {} / {} tiles".format(sel.sum(), len(t)))
 
