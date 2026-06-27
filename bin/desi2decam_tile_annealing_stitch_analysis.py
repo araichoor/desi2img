@@ -12,7 +12,7 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.coordinates import SkyCoord
 from astropy import units as u
-from desi2decam_utils import (
+from desi2img.desi2decam_utils import (
     read_yaml,
     get_ccdnames,
     get_ref_radecs,

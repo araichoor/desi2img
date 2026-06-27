@@ -6,7 +6,7 @@ import os
 import tempfile
 import numpy as np
 from astropy.table import Table, vstack
-from desi2decam_utils import (
+from desi2img.desi2decam_utils import (
     get_radius,
     get_ccdnames,
     get_ref_radecs,

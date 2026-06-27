@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy import units
 import matplotlib.pyplot as plt
-from desi2decam_io import (
+from desi2img.desi2decam_io import (
     get_ccdnames,
     # get_ref_hdrs,
     get_ref_radecs,

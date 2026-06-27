@@ -15,7 +15,7 @@ import healpy as hp
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table, vstack
-from desi2decam_utils import (
+from desi2img.desi2decam_utils import (
     read_yaml,
     get_init_tiles,
     get_ccdnames,
