@@ -242,9 +242,10 @@ def radec2vec(ras, decs):
     return vecs
     
 """
-def get_tiles_pixs(tileras, tiledecs, nside, trad=None):
+def get_tiles_pixs(camera, tileras, tiledecs, nside, trad=None):
+    assert camera in allowed_cameras
     if trad is None:
-        trad = get_radius("decam")
+        trad = get_radius(camera)
     tiles = Table()
     tiles["RA"], tiles["DEC"] = np.atleast_1d(tileras), np.atleast_1d(tiledecs)
     tpixs = tiles2pix(nside, tiles=tiles, radius=trad)
@@ -316,7 +317,9 @@ def get_isin_radec_ellipse(c_ra, c_dec, ras, decs, ra_radius, dec_radius, closed
 # fact: see desimodel.footprint.tiles2pix
 # 20240525 : added "if inflate_ra_factor == 1."
 #   [backwards compatible for inflate_ra_factor != 1]
-def get_tiles_pixs(tileras, tiledecs, nside, inflate_ra_factor, trad=None):
+def get_tiles_pixs(camera, tileras, tiledecs, nside, inflate_ra_factor, trad=None):
+
+    assert camera in allowed_cameras
 
     # hp stuff
     nest = True
@@ -327,7 +330,7 @@ def get_tiles_pixs(tileras, tiledecs, nside, inflate_ra_factor, trad=None):
     ntile = len(tras)
 
     if trad is None:
-        trad = get_radius("decam")
+        trad = get_radius(camera)
 
     # no inflate case, simple
     if inflate_ra_factor == 1.:
@@ -401,7 +404,7 @@ def get_tile_nccds(
     )
 
     # pixels overlapping the tile
-    tpixs = get_tiles_pixs(tilera, tiledec, nside, inflate_ra_factor, trad=decam_radius)
+    tpixs = get_tiles_pixs("decam", tilera, tiledec, nside, inflate_ra_factor, trad=decam_radius)
     #tiles = Table()
     #tiles["RA"], tiles["DEC"] = [tilera], [tiledec]
     #tpixs = tiles2pix(nside, tiles=tiles, radius=decam_radius)
@@ -625,7 +628,7 @@ def compute_nccds(rands_fns, t, config, numproc, trad=None):
     # for each pixel, list what tiles do overlap
     pixits = {pix: [] for pix in pixs}
     for i in range(len(t)):
-        tpixs_i = get_tiles_pixs(t["RA"][i], t["DEC"][i], nside, config["inflate_ra_factor"], trad=trad)
+        tpixs_i = get_tiles_pixs("decam", t["RA"][i], t["DEC"][i], nside, config["inflate_ra_factor"], trad=trad)
         # print(i, t["TILEID"][i], t["RA"][i], t["DEC"][i], "{:.2f} deg2".format(tpixs_i.size*hp.nside2pixarea(nside,degrees=True)))
         # handle case where we ve discarded a pixel because
         # it was not containing any rands with NCCD>0
@@ -813,7 +816,7 @@ def get_anneal_allowtpixs(t, nside, inflate_ra_factor, trad=None):
 
         # pixels overlapping the tiles
         # pixs = tiles2pix(nside, tiles=t, radius=trad)
-        pixs = get_tiles_pixs(t["RA"], t["DEC"], nside, inflate_ra_factor, trad=None)
+        pixs = get_tiles_pixs("decam", t["RA"], t["DEC"], nside, inflate_ra_factor, trad=None)
 
         # "enlarge" the boundaries far enough to include
         for i in range(nlayer):
@@ -1038,7 +1041,7 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
 
                 # touched rands pixels
                 # consider *both* old + new tiles
-                new_rpixs = get_tiles_pixs([t["RA"][i], new_tra], [t["DEC"][i], new_tdec], rnside, inflate_ra_factor)
+                new_rpixs = get_tiles_pixs("decam", [t["RA"][i], new_tra], [t["DEC"][i], new_tdec], rnside, inflate_ra_factor)
                 # restrict to "existing" pixels [as some may have been discarded,
                 #   as no rands had NCCD>0 for the initial tiling)
                 sel = np.in1d(new_rpixs, pixs)
@@ -1106,10 +1109,10 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
                 # print(j)
 
                 # rands pixels touched by the "old" + "new" tiles
-                old_pixs_j = get_tiles_pixs(old_t["RA"][j], old_t["DEC"][j], rnside, inflate_ra_factor, trad=trad)
+                old_pixs_j = get_tiles_pixs("decam", old_t["RA"][j], old_t["DEC"][j], rnside, inflate_ra_factor, trad=trad)
                 sel = np.in1d(old_pixs_j, pixs)
                 old_pixs_j = old_pixs_j[sel]
-                new_pixs_j = get_tiles_pixs(new_t["RA"][j], new_t["DEC"][j], rnside, inflate_ra_factor, trad=trad)
+                new_pixs_j = get_tiles_pixs("decam", new_t["RA"][j], new_t["DEC"][j], rnside, inflate_ra_factor, trad=trad)
                 sel = np.in1d(new_pixs_j, pixs)
                 new_pixs_j = new_pixs_j[sel]
                 oldnew_unq_pixs_j = np.unique(old_pixs_j.tolist() + new_pixs_j.tolist())
