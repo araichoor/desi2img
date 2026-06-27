@@ -100,10 +100,19 @@ def read_yaml(fn):
     return config
 
 
-# ra,dec,airmass~0,0,1.2 (dec~0 is the "center" of the desi2 footprint)
-def get_ref_fn():
-    # return "/global/cfs/cdirs/cosmo/staging/decam/DECam_CP-DR11/CP20240101/c4d_240102_045550_ooi_i_v1.fits.fz" # dec~0, airmass~1.2
-    return "/global/cfs/cdirs/cosmo/staging/decam/DECam_CP-DR11/CP20121019/c4d_121020_014450_ooi_g_ls11.fits.fz"
+# decam: ra,dec,airmass~0,0,1.2 (dec~0 is the "center" of the desi2 footprint)
+def get_ref_fn(camera):
+
+    assert camera in allowed_cameras
+
+    if camera == "decam":
+        # fn = "/global/cfs/cdirs/cosmo/staging/decam/DECam_CP-DR11/CP20240101/c4d_240102_045550_ooi_i_v1.fits.fz" # dec~0, airmass~1.2
+        fn = "/global/cfs/cdirs/cosmo/staging/decam/DECam_CP-DR11/CP20121019/c4d_121020_014450_ooi_g_ls11.fits.fz"
+
+    if camera == "megacam":
+        fn = "/global/cfs/cdirs/cosmo/work/users/dstn/CFIS-u-XMM/completed/2786423p.fits.fz"
+
+    return fn
 
 
 def plot_decam_radec_ccds(ax, ccds, ra_wrap_center=0, print_ccd_names=True):
@@ -140,7 +149,7 @@ def plot_decam_radec_ccds(ax, ccds, ra_wrap_center=0, print_ccd_names=True):
 def get_ref_hdrs(ccd_names, ref_fn=None):
 
     if ref_fn is None:
-        ref_fn = get_ref_fn()
+        ref_fn = get_ref_fn("decam")
 
     h = fits.open(ref_fn)
     exts = np.array([h[i].header["EXTNAME"] for i in range(1, len(h))])
@@ -166,7 +175,7 @@ def get_ref_radecs(
 ):
 
     if ref_fn is None:
-        ref_fn = get_ref_fn()
+        ref_fn = get_ref_fn("decam")
 
     h = fits.open(ref_fn)
     # CRVAL1,CRVAL2: image center for all ccds
