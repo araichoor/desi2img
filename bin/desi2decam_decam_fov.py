@@ -58,6 +58,7 @@ def main():
         )
 
         ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(
+            "decam",
             ccd_names,
             npix_msk, npix_msk, npix_msk, npix_msk,
         )

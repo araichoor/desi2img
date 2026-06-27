@@ -160,6 +160,7 @@ def get_ref_hdrs(camera, ccd_names, ref_fn=None):
 # "default" values are:
 # - npix_msk_*=0 (ie take the whole ccds)
 def get_ref_radecs(
+    camera,
     names,
     npix_msk_xstart,
     npix_msk_xend,
@@ -169,7 +170,7 @@ def get_ref_radecs(
 ):
 
     if ref_fn is None:
-        ref_fn = get_ref_fn("decam")
+        ref_fn = get_ref_fn(camera)
 
     h = fits.open(ref_fn)
     # CRVAL1,CRVAL2: image center for all ccds
@@ -610,6 +611,7 @@ def compute_nccds(rands_fns, t, config, numproc, trad=None):
     ccd_names = hdr["CCDNAMES"].split(",")
     # log.info("ccd_names : {}".format(",".join(ccd_names)))
     ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(
+        "decam",
         ccd_names,
         config["npix_msk_xstart"],
         config["npix_msk_xend"],
@@ -955,7 +957,8 @@ def anneal_run(rands_fns, t, np_rand_seed, config, prev_a, numproc):
 
     # reference ccds
     ccd_names = hdr["CCDNAMES"].split(",")
-    ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(                                                                                                                                          
+    ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(
+        "decam",
         ccd_names,
         config["npix_msk_xstart"],
         config["npix_msk_xend"],

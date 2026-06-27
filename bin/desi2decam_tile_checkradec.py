@@ -43,7 +43,7 @@ def main():
     ccd_names = np.array([_ for _ in all_ccd_names if _ not in args.black_ccd_names.split(",")])
 
     # ref_tilera, ref_tiledec, ref_hdrs = get_ref_hdrs("decam", ccd_names)
-    ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(ccd_names)
+    ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs("decam", ccd_names)
     print("{}\t{:.1f}\t{:.1f}".format("ref", ref_tilera, ref_tiledec))
 
     fns = sorted(glob("/global/cfs/cdirs/cosmo/staging/decam/DECam_CP-DR11/CP20240403/c4d_*_ooi_*.fits.fz"))

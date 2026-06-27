@@ -91,6 +91,7 @@ def main():
     )
     log.info("ccd_names : {}".format(",".join(ccd_names)))
     ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(
+        "decam",
         ccd_names,
         config["npix_msk_xstart"],
         config["npix_msk_xend"],
