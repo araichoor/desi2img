@@ -62,6 +62,10 @@ def get_pixscale(camera):
 
 
 # approx. conservative (i.e. larger than real)
+# for the ref_fn, check the largest distance betwen the ccd corners
+# and the image center:
+# - decam (with a 33-pix margin): 1.092 deg
+# - megacam (with a 0-pix margin): 0.698 deg
 def get_radius(camera):
 
     assert camera in allowed_cameras
@@ -70,7 +74,7 @@ def get_radius(camera):
         radius = 1.1
 
     if camera == "megacam":
-        radius = 0.57
+        radius = 0.70
 
     return radius
 
