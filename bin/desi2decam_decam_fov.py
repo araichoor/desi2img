@@ -4,6 +4,7 @@ import os
 import numpy as np
 from astropy.table import Table, vstack
 from desi2img.desi2decam_utils import (
+    allowed_cameras,
     get_ccdnames,
     get_ref_radecs,
     get_tile_ccds_radecs,
@@ -26,6 +27,13 @@ def parse():
         type=str,
         default=None,
     )
+    parser.add_argument(
+        "--camera",
+        help="camera to use",
+        type=str,
+        choices=allowed_cameras,
+        default="decam",
+    )
     args = parser.parse_args()
     for kwargs in args._get_kwargs():
         log.info("{}:\t{}".format(kwargs[0], kwargs[1]))
@@ -37,11 +45,17 @@ def main():
     args = parse()
 
     tilera, tiledec = 0., 0.
-    all_ccd_names = get_ccdnames("decam")
-    black_ccd_names = "N30,S7"
+    all_ccd_names = get_ccdnames(args.camera)
+    # usual settings
+    if args.camera == "decam":
+        black_ccd_names = "N30,S7"
+        npix_msks = [0, 33, 33]
+    if args.camera == "megacam":
+        black_ccd_names = ""
+        npix_msks = [0, 0, 0]
 
     for npix_msk, inflate_ra_factor in zip(
-        [0, 33, 33],
+        npix_msks,
         [1, 1, 10],
     ):
 
@@ -58,7 +72,7 @@ def main():
         )
 
         ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(
-            "decam",
+            args.camera,
             ccd_names,
             npix_msk, npix_msk, npix_msk, npix_msk,
         )

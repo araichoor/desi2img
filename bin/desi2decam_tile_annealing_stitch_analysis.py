@@ -142,6 +142,7 @@ def main():
     config["inflate_ra_factor"] = 1  # reset to 1
     outdir = config["outdir"]
     np_rand_seed = config["np_rand_seed"]
+    camera = config["camera"]
     black_ccd_names = config["black_ccd_names"]
     rnside = config["rnside"]
 
@@ -149,13 +150,13 @@ def main():
     start = time()
 
     #
-    all_ccd_names = get_ccdnames("decam")
+    all_ccd_names = get_ccdnames(camera)
     ccd_names = np.array(
         [_ for _ in all_ccd_names if _ not in black_ccd_names.split(",")]
     )
     log.info("ccd_names : {}".format(",".join(ccd_names)))
     ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(
-        "decam",
+        camera,
         ccd_names,
         config["npix_msk_xstart"],
         config["npix_msk_xend"],
@@ -181,7 +182,7 @@ def main():
 
     # nccds
     start = time()
-    all_nccds, _ = compute_nccds("decam", rands_fns, t, config, args.numproc)
+    all_nccds, _ = compute_nccds(camera, rands_fns, t, config, args.numproc)
     print("len(all_nccds) = ", len(all_nccds))
     r["NCCD"] = np.hstack([_ for _ in all_nccds])
     print(r["NCCD"].mean(), np.median(r["NCCD"]))

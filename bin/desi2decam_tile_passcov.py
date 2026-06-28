@@ -7,6 +7,7 @@ import tempfile
 import numpy as np
 from astropy.table import Table, vstack
 from desi2img.desi2decam_utils import (
+    allowed_cameras,
     get_radius,
     get_ccdnames,
     get_ref_radecs,
@@ -26,6 +27,13 @@ dpi = 300
 
 def parse():
     parser = ArgumentParser()
+    parser.add_argument(
+        "--camera",
+        help="camera to use",
+        type=str,
+        choices=allowed_cameras,
+        default="decam",
+    )
     parser.add_argument(
         "--tilesfn",
         help="tiles filename (default=None)",
@@ -71,27 +79,37 @@ def main():
     # usual settings
     tmpoutdir = tempfile.mkdtemp()
     print("tmpoutdir = ", tmpoutdir)
-    black_ccd_names = "N30,S7"
-    config = {
-        "npix_msk_xstart" : 33,
-        "npix_msk_xend" : 33,
-        "npix_msk_ystart" : 33,
-        "npix_msk_yend" : 33,
-        "inflate_ra_factor" : 1.,
-    }
+    if args.camera == "decam":
+        black_ccd_names = "N30,S7"
+        config = {
+            "npix_msk_xstart" : 33,
+            "npix_msk_xend" : 33,
+            "npix_msk_ystart" : 33,
+            "npix_msk_yend" : 33,
+            "inflate_ra_factor" : 1.,
+        }
+    if args.camera == "megacam":
+        black_ccd_names = ""
+        config = {
+            "npix_msk_xstart" : 0,
+            "npix_msk_xend" : 0,
+            "npix_msk_ystart" : 0,
+            "npix_msk_yend" : 0,
+            "inflate_ra_factor" : 1.,
+        }
     randdens, rnside = 10000, 32
     
     # rands: generate over a box
     start = time()
 
     #
-    all_ccd_names = get_ccdnames("decam")
+    all_ccd_names = get_ccdnames(args.camera)
     ccd_names = np.array(
         [_ for _ in all_ccd_names if _ not in black_ccd_names.split(",")]
     )
     log.info("ccd_names : {}".format(",".join(ccd_names)))
     ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(
-        "decam",
+        args.camera,
         ccd_names,
         config["npix_msk_xstart"],
         config["npix_msk_xend"],
@@ -99,7 +117,7 @@ def main():
         config["npix_msk_yend"],
     )
 
-    decam_radius = get_radius("decam")
+    camera_radius = get_radius(args.camera)
     create_rands(
         tmpoutdir,
         randdens,
@@ -122,10 +140,10 @@ def main():
     start = time()
     t = Table.read(args.tilesfn)
     sel = (
-        (t["RA"] > ramin - decam_radius) & 
-        (t["RA"] < ramax + decam_radius) &
-        (t["DEC"] > decmin - decam_radius) & 
-        (t["DEC"] < decmax + decam_radius)
+        (t["RA"] > ramin - camera_radius) & 
+        (t["RA"] < ramax + camera_radius) &
+        (t["DEC"] > decmin - camera_radius) & 
+        (t["DEC"] < decmax + camera_radius)
     )
     t = t[sel]
 
@@ -145,7 +163,7 @@ def main():
     nccds = {}
     for passid in passids:
         sel = t["PASS"] == passid
-        tmpnccds, _ = compute_nccds("decam", rands_fns, t[sel], config, args.numproc)
+        tmpnccds, _ = compute_nccds(args.camera, rands_fns, t[sel], config, args.numproc)
         nccds[passid] = np.hstack([_ for _ in tmpnccds])
     log.info("compute_nccds: {:.1f}s".format(time() - start))
 

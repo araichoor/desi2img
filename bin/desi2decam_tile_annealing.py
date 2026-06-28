@@ -82,6 +82,7 @@ def main():
     config = read_yaml(args.yamlfn)
     outdir = config["outdir"]
     np_rand_seed = config["np_rand_seed"]
+    camera = config["outdir"]
     black_ccd_names = config["black_ccd_names"]
     randdens = config["randdens"]
     ramin, ramax, decmin, decmax = (
@@ -102,13 +103,13 @@ def main():
         t_fn = os.path.join(outdir, "tiles-anneal-iter{:06d}.fits".format(0))
 
         #
-        all_ccd_names = get_ccdnames("decam")
+        all_ccd_names = get_ccdnames(camera)
         ccd_names = np.array(
             [_ for _ in all_ccd_names if _ not in black_ccd_names.split(",")]
         )
         log.info("ccd_names : {}".format(",".join(ccd_names)))
         ref_tilera, ref_tiledec, ref_radecs = get_ref_radecs(
-            "decam",
+            camera,
             ccd_names,
             config["npix_msk_xstart"],
             config["npix_msk_xend"],
@@ -140,7 +141,7 @@ def main():
         # nccds
         start = time()
         rands_fns = np.sort(glob(os.path.join(outdir, "rands", "rands-hp-*.fits")))
-        all_nccds, tsel = compute_nccds("decam", rands_fns, t, config, args.numproc)
+        all_nccds, tsel = compute_nccds(camera, rands_fns, t, config, args.numproc)
         log.info("compute_nccds: {:.1f}s".format(time() - start))
 
         # update NCCD file values
