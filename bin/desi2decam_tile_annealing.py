@@ -82,7 +82,7 @@ def main():
     config = read_yaml(args.yamlfn)
     outdir = config["outdir"]
     np_rand_seed = config["np_rand_seed"]
-    camera = config["outdir"]
+    camera = config["camera"]
     black_ccd_names = config["black_ccd_names"]
     randdens = config["randdens"]
     ramin, ramax, decmin, decmax = (
