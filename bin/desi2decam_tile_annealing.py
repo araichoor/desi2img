@@ -167,8 +167,9 @@ def main():
         t, t0 = Table.read(t_fn), Table.read(t0_fn)
         outpng = r_fn.replace(".fits", ".png")
 
-        xs = np.array(r_fn.split(os.path.sep))
-        title = "/".join(xs[np.where(xs == "desi2decam")[0][0] :])
+        #xs = np.array(r_fn.split(os.path.sep))
+        #title = "/".join(xs[np.where(xs == "desi2decam")[0][0] :])
+        title = os.path.dirname(r_fn)
         nccd_plot(
             outpng,
             r,
