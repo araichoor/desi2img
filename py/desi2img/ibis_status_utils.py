@@ -375,10 +375,13 @@ def custom_read_tiles_exps_ccds(
     t = Table.read(tilesfn)
 
     # AR ccds
-    fns = []
-    for num in [3, 4, 5, 6]:
-        fns.append(os.path.join(ccdsdir, "ccds-annotated-ibis-{}.fits".format(num)))
-    ccds = vstack([Table(fitsio.read(fn)) for fn in fns])
+    # TODO: temporary fix, sort out cleaner code for long term...
+    #fns = []
+    #for num in [3, 4, 5, 6]:
+    #    fns.append(os.path.join(ccdsdir, "ccds-annotated-ibis-{}.fits".format(num)))
+    #ccds = vstack([Table(fitsio.read(fn)) for fn in fns])
+    fn = os.path.join(ccdsdir, "ccds-annotated-ibis-v2.fits")
+    ccds = Table(fitsio.read(fn))
     for key in ccds.colnames:
         ccds[key].name = key.upper()
     ccds = ccds[ccds["EXPNUM"] > 0]
