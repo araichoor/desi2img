@@ -397,10 +397,10 @@ def custom_read_tiles_exps_ccds(
     e["NIGHT"] = get_nightobs(e["MJD_OBS"], camera)
     sel = np.array(["DECam" in _ for _ in e["FILENAME"]])
     sel &= np.array(["IBIS" in _ for _ in e["OBJECT"]])
-    sel &= np.in1d(e["BAND"], bands)
+    sel &= np.isin(e["BAND"], bands)
     e = e[sel]
     # AR remove exposures not in tiles (IBIS_wide_M464_354835)
-    sel = ~np.in1d(e["OBJECT"], t["OBJECT"])
+    sel = ~np.isin(e["OBJECT"], t["OBJECT"])
     print("ignore the following {} exposure(s)".format(sel.sum()))
     print(e[sel]["OBJECT", "NIGHT", "BAND", "EXPNUM", "EFFTIME"])
     e = e[~sel]
@@ -500,10 +500,10 @@ def plot_tiles(outpng, survey, field, band, tiles, exps, proj_rad_deg=3):
             "IBIS_{}_{}_{}_{}".format(survey, field, band, tileid)
             for tileid in tiles["TILEID"][obs]
         ]
-    tmpsel = np.in1d(exps["OBJECT"], obs_objects)
+    tmpsel = np.isin(exps["OBJECT"], obs_objects)
     """
     """
-    tmpsel = np.in1d(exps["OBJECT"], tiles["OBJECT"][obs])
+    tmpsel = np.isin(exps["OBJECT"], tiles["OBJECT"][obs])
     if tmpsel.sum() == 0:
         lastnight = "-"
     else:
@@ -1072,7 +1072,7 @@ def plot_wide_skycov(
     expfac = 0
     for i in range(npass):
         sel = t["PASS"] == passids[i]
-        sel &= np.in1d(t["TILEID"], case_tileids)
+        sel &= np.isin(t["TILEID"], case_tileids)
         if sel.sum() > 0:
             ipixs = tiles2pix(nside, tiles=t[sel], radius=radius_deg)
             ns[ipixs] += 1
@@ -1431,7 +1431,7 @@ def write_html(outdir, tiles, exps, ccds):
 
     my_nights = np.unique(exps["NIGHT"])
     # ccds_nights = np.unique(ccds["NIGHT"])
-    # assert np.all(np.in1d(ccds_nights, my_nights))
+    # assert np.all(np.isin(ccds_nights, my_nights))
     my_yyyys = np.array([str(night // 10000) for night in my_nights])
     my_mms = np.array(["{:02d}".format((night % 10000) // 100) for night in my_nights])
     my_dds = np.array(["{:02d}".format(night % 100) for night in my_nights])
@@ -1555,7 +1555,7 @@ def check_staged_files_one_night(night):
     for key in d.colnames:
         d[key].name = key.upper()
     bands = get_ibis_bands()
-    sel = np.in1d(d["BAND"], bands)
+    sel = np.isin(d["BAND"], bands)
     sel &= d["EFFTIME"] > 0
     d = d[sel]
     d["NIGHT"] = night
@@ -1567,7 +1567,7 @@ def check_staged_files_one_night(night):
         )
     )
     staged_expnums = [fitsio.read_header(fn, 0)["EXPNUM"] for fn in fns]
-    sel = ~np.in1d(d["EXPNUM"], staged_expnums)
+    sel = ~np.isin(d["EXPNUM"], staged_expnums)
     if sel.sum() == 0:
         return None
     else:
@@ -1587,7 +1587,7 @@ def check_staged_files(numproc):
     for key in d.colnames:
         d[key].name = key.upper()
     bands = get_ibis_bands()
-    sel = np.in1d(d["BAND"], bands)
+    sel = np.isin(d["BAND"], bands)
     sel &= d["EFFTIME"] > 0
     d = d[sel]
     d["NIGHT"] = get_nightobs(d["MJD_OBS"], "decam")
