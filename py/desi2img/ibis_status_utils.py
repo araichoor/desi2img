@@ -165,6 +165,69 @@ def get_camera_props(camera):
     }[camera]
 
 
+# https://desi.lbl.gov/trac/wiki/DecamLegacy/IBIS/ObservingSchedule
+def get_runs_first_last_nights():
+
+    return {
+        # 2024B
+        1: (20240530, 20240609),
+        2: (20240629, 20240712),
+        3: (20241028, 20241105),
+        4: (20241123, 20241208),
+        # 2025A
+        5: (20250228, 20250303),
+        6: (20250325, 20250330),
+        7: (20250425, 20250429),
+        8: (20250525, 20250529),
+        # 2025B
+        9: (20250922, 20250924),
+        10: (20251014, 20251020),
+        11: (20251210, 20251228),
+        # 2026A
+        12: (20260214, 20260222),
+        13: (20260311, 20260326),
+        14: (20260408, 20260419),
+        15: (20260512, 20260522),
+        16: (20260611, 20260618),
+        17: (20260706, 20260718),
+        # 2026B
+        18: (20260806, 20260818),
+        19: (20260902, 20260917),
+        20: (20261002, 20261017),
+        21: (20261210, 20261215),
+        22: (20270104, 20270130),
+    }
+
+
+def get_runs_stats(e, runs=None):
+
+    runs_first_last_nights = get_runs_first_last_nights()
+    if runs is None:
+        runs = list(runs_first_last_nights.keys())
+
+    bands = get_ibis_bands()
+
+    d = Table()
+    d["RUN"] = runs
+    d["FIRST_NIGHT"] = [runs_first_last_nights[run][0] for run in runs]
+    d["LAST_NIGHT"] = [runs_first_last_nights[run][1] for run in runs]
+    d["ONSKY_HRS"] = 0.
+    for key in ["NTILE_{}".format(band) for band in bands]:
+        d[key] = 0
+
+    for i, run in enumerate(runs):
+        sel = (e["NIGHT"] >= d["FIRST_NIGHT"][i]) & (e["NIGHT"] <= d["LAST_NIGHT"][i])
+        d["ONSKY_HRS"][i] = float("{:.1f}".format(e["EXPTIME"][sel].sum() / 3600))
+        if sel.sum() > 0:
+            for band in bands:
+                sel2 = (sel) & (e["BAND"] == band)
+                tileids = np.unique(e["TILEID"][sel2])
+                d["NTILE_{}".format(band)][i] = tileids.size
+
+    return d
+
+
+
 def get_surveyfield_rows(survey, field, d, d_input, band=None):
 
     assert d_input in ["tiles", "ccds"]
@@ -312,10 +375,13 @@ def custom_read_tiles_exps_ccds(
     t = Table.read(tilesfn)
 
     # AR ccds
-    fns = []
-    for num in [3, 4, 5, 6]:
-        fns.append(os.path.join(ccdsdir, "ccds-annotated-ibis-{}.fits".format(num)))
-    ccds = vstack([Table(fitsio.read(fn)) for fn in fns])
+    # TODO: temporary fix, sort out cleaner code for long term...
+    #fns = []
+    #for num in [3, 4, 5, 6]:
+    #    fns.append(os.path.join(ccdsdir, "ccds-annotated-ibis-{}.fits".format(num)))
+    #ccds = vstack([Table(fitsio.read(fn)) for fn in fns])
+    fn = os.path.join(ccdsdir, "ccds-annotated-ibis-v2.fits")
+    ccds = Table(fitsio.read(fn))
     for key in ccds.colnames:
         ccds[key].name = key.upper()
     ccds = ccds[ccds["EXPNUM"] > 0]
@@ -331,10 +397,10 @@ def custom_read_tiles_exps_ccds(
     e["NIGHT"] = get_nightobs(e["MJD_OBS"], camera)
     sel = np.array(["DECam" in _ for _ in e["FILENAME"]])
     sel &= np.array(["IBIS" in _ for _ in e["OBJECT"]])
-    sel &= np.in1d(e["BAND"], bands)
+    sel &= np.isin(e["BAND"], bands)
     e = e[sel]
     # AR remove exposures not in tiles (IBIS_wide_M464_354835)
-    sel = ~np.in1d(e["OBJECT"], t["OBJECT"])
+    sel = ~np.isin(e["OBJECT"], t["OBJECT"])
     print("ignore the following {} exposure(s)".format(sel.sum()))
     print(e[sel]["OBJECT", "NIGHT", "BAND", "EXPNUM", "EFFTIME"])
     e = e[~sel]
@@ -434,10 +500,10 @@ def plot_tiles(outpng, survey, field, band, tiles, exps, proj_rad_deg=3):
             "IBIS_{}_{}_{}_{}".format(survey, field, band, tileid)
             for tileid in tiles["TILEID"][obs]
         ]
-    tmpsel = np.in1d(exps["OBJECT"], obs_objects)
+    tmpsel = np.isin(exps["OBJECT"], obs_objects)
     """
     """
-    tmpsel = np.in1d(exps["OBJECT"], tiles["OBJECT"][obs])
+    tmpsel = np.isin(exps["OBJECT"], tiles["OBJECT"][obs])
     if tmpsel.sum() == 0:
         lastnight = "-"
     else:
@@ -1006,7 +1072,7 @@ def plot_wide_skycov(
     expfac = 0
     for i in range(npass):
         sel = t["PASS"] == passids[i]
-        sel &= np.in1d(t["TILEID"], case_tileids)
+        sel &= np.isin(t["TILEID"], case_tileids)
         if sel.sum() > 0:
             ipixs = tiles2pix(nside, tiles=t[sel], radius=radius_deg)
             ns[ipixs] += 1
@@ -1319,6 +1385,33 @@ def write_html(outdir, tiles, exps, ccds):
     html.write("</div>\n")
     html.write("\n")
 
+    # AR Per-run stats
+    stats = get_runs_stats(exps)
+    html.write(
+        "<button type='button' class='collapsible'><strong>Per-run stats</strong></button>\n"
+    )
+    html.write("<div class='content'>\n")
+    #
+    html.write("<table>\n")
+    html.write("\t<tr>\n")
+    html.write("\t</tr>\n")
+    html.write("\t<tr>\n")
+    # AR header
+    for key in stats.colnames:
+        html.write("\t\t<th>{}</th>\n".format(key))
+    html.write("\t</tr>\n")
+    html.write("\t<tr>\n")
+    # AR writing table
+    for i in range(len(stats)):
+        for key in stats.colnames:
+            html.write("\t\t<td> {} </td>\n".format(stats[key][i]))
+        html.write("\t</tr>\n")
+    html.write("</table>\n")
+    html.write("\n")
+    #
+    html.write("</div>\n")
+    html.write("\n")
+
     # AR Per-night products:
     # AR expdepths, obsconds
     html.write(
@@ -1338,7 +1431,7 @@ def write_html(outdir, tiles, exps, ccds):
 
     my_nights = np.unique(exps["NIGHT"])
     # ccds_nights = np.unique(ccds["NIGHT"])
-    # assert np.all(np.in1d(ccds_nights, my_nights))
+    # assert np.all(np.isin(ccds_nights, my_nights))
     my_yyyys = np.array([str(night // 10000) for night in my_nights])
     my_mms = np.array(["{:02d}".format((night % 10000) // 100) for night in my_nights])
     my_dds = np.array(["{:02d}".format(night % 100) for night in my_nights])
@@ -1462,7 +1555,7 @@ def check_staged_files_one_night(night):
     for key in d.colnames:
         d[key].name = key.upper()
     bands = get_ibis_bands()
-    sel = np.in1d(d["BAND"], bands)
+    sel = np.isin(d["BAND"], bands)
     sel &= d["EFFTIME"] > 0
     d = d[sel]
     d["NIGHT"] = night
@@ -1474,7 +1567,7 @@ def check_staged_files_one_night(night):
         )
     )
     staged_expnums = [fitsio.read_header(fn, 0)["EXPNUM"] for fn in fns]
-    sel = ~np.in1d(d["EXPNUM"], staged_expnums)
+    sel = ~np.isin(d["EXPNUM"], staged_expnums)
     if sel.sum() == 0:
         return None
     else:
@@ -1494,7 +1587,7 @@ def check_staged_files(numproc):
     for key in d.colnames:
         d[key].name = key.upper()
     bands = get_ibis_bands()
-    sel = np.in1d(d["BAND"], bands)
+    sel = np.isin(d["BAND"], bands)
     sel &= d["EFFTIME"] > 0
     d = d[sel]
     d["NIGHT"] = get_nightobs(d["MJD_OBS"], "decam")

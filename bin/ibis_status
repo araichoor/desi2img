@@ -81,7 +81,7 @@ def parse():
     )
     args = parser.parse_args()
     steps = np.array(args.steps.split(","))
-    sel = ~np.in1d(steps, allowed_steps)
+    sel = ~np.isin(steps, allowed_steps)
     if sel.sum() > 0:
         raise ValueError(
             "ERROR : not allowed args.steps = {}\t=> exiting".format(
